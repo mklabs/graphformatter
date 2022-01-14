@@ -337,6 +337,25 @@ FFormatterDelegates FFormatterHacker::GetDelegates(UObject* Object, IAssetEditor
 		if (ComboGraphEditor)
 		{
 			GraphFormatterDelegates = ::GetDelegates(ComboGraphEditor);
+			GraphFormatterDelegates.IsVerticalPositioning.BindLambda([ComboGraphEditor]()
+			{
+				return ComboGraphEditor->IsVerticalPositioning();
+			});
+
+			GraphFormatterDelegates.OffsetCalculator.BindLambda([ComboGraphEditor](UEdGraphPin* Pin)
+			{
+				const bool bIsVerticalPositioning = ComboGraphEditor->IsVerticalPositioning();
+
+				if (!bIsVerticalPositioning)
+				{
+					SGraphEditor* GraphEditor = GetGraphEditor(ComboGraphEditor);
+					return GetPinOffset(GraphEditor, Pin);
+				}
+
+				// Special care for vertical positioning
+				return FVector2D::ZeroVector;
+			});
+
 			return GraphFormatterDelegates;
 		}
 	}
