@@ -33,6 +33,9 @@ namespace UnrealBuildTool.Rules
 					"AIModule",
 					"AIGraph",
 					"BehaviorTreeEditor",
+
+					"ComboGraph",
+					"ComboGraphEditor",
 				}
 			);
 		}

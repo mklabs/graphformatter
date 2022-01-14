@@ -22,8 +22,10 @@
 #include "Framework/Application/SlateApplication.h"
 #include "Editor/BehaviorTreeEditor/Private/BehaviorTreeEditor.h"
 #include "FormatterGraph.h"
+#include "AssetEditor/ComboGraphAssetEditor.h"
+#include "Graph/ComboGraph.h"
 
-/* 
+/*
 ** Offsets for the purpose of debug, only tested on Win64
 ** On Windows, acquiring the pointer to private member of a class in debug build don't work as expect
 ** So I have to do this hack
@@ -47,6 +49,7 @@ DECLARE_PRIVATE_MEMBER_ACCESSOR(FAccessAIGraphEditor, FAIGraphEditor, TWeakPtr<S
 DECLARE_PRIVATE_MEMBER_ACCESSOR(FAccessSGraphEditorImpl, SGraphEditor, TSharedPtr<SGraphEditor>, Implementation)
 DECLARE_PRIVATE_MEMBER_ACCESSOR(FAccessSGraphEditorPanel, SGraphEditorImpl, TSharedPtr<SGraphPanel>, GraphPanel)
 DECLARE_PRIVATE_MEMBER_ACCESSOR(FAccessSGraphPanelZoomLevels, SNodePanel, TUniquePtr<FZoomLevelsContainer>, ZoomLevels)
+DECLARE_PRIVATE_MEMBER_ACCESSOR(FAccessComboGraphEditor, FComboGraphAssetEditor, TSharedPtr<SGraphEditor>, GraphEditorWidget)
 #endif
 struct FAccessSGraphPanelPostChangedZoom
 {
@@ -115,6 +118,16 @@ SGraphEditor* GetGraphEditor(const FBehaviorTreeEditor* Editor)
 	if (GraphEditor.IsValid())
 	{
 		return GraphEditor.Pin().Get();
+	}
+	return nullptr;
+}
+
+SGraphEditor* GetGraphEditor(const FComboGraphAssetEditor* Editor)
+{
+	auto& GraphEditor = Editor->*FPrivateAccessor<FAccessComboGraphEditor>::Member;
+	if (GraphEditor.IsValid())
+	{
+		return GraphEditor.Get();
 	}
 	return nullptr;
 }
@@ -315,6 +328,15 @@ FFormatterDelegates FFormatterHacker::GetDelegates(UObject* Object, IAssetEditor
 				IndexB = (BTNodeB && BTNodeB->GetExecutionIndex() < 0xffff) ? BTNodeB->GetExecutionIndex() : -1;
 				return IndexA < IndexB;
 			});
+			return GraphFormatterDelegates;
+		}
+	}
+	if (Cast<UComboGraph>(Object))
+	{
+		FComboGraphAssetEditor* ComboGraphEditor = StaticCast<FComboGraphAssetEditor*>(Instance);
+		if (ComboGraphEditor)
+		{
+			GraphFormatterDelegates = ::GetDelegates(ComboGraphEditor);
 			return GraphFormatterDelegates;
 		}
 	}
